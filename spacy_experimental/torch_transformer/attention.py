@@ -51,11 +51,11 @@ class MultiHeadAttention(Module):
         self.dims_per_head = model_dim // n_heads
         self.attention = ScaledDotProductAttention(dropout=dropout)
 
-        self.weights_q = torch.nn.Linear(model_dim, model_dim)
-        self.weights_k = torch.nn.Linear(model_dim, model_dim)
-        self.weights_v = torch.nn.Linear(model_dim, model_dim)
+        self.query = torch.nn.Linear(model_dim, model_dim)
+        self.key = torch.nn.Linear(model_dim, model_dim)
+        self.value = torch.nn.Linear(model_dim, model_dim)
 
-        self.linear_out = torch.nn.Linear(model_dim, model_dim)
+        self.output = torch.nn.Linear(model_dim, model_dim)
 
     def _split_heads(self, x: Tensor) -> Tensor:
         """
@@ -90,9 +90,9 @@ class MultiHeadAttention(Module):
         `attn_mask` indicates elements to be masked with values of `1`
         """
 
-        k = self.weights_k(k)
-        q = self.weights_q(q)
-        v = self.weights_v(v)
+        k = self.key(k)
+        q = self.query(q)
+        v = self.value(v)
 
         # (batch, head, seq_len, dims_per_head)
         k = self._split_heads(k)
@@ -109,6 +109,6 @@ class MultiHeadAttention(Module):
 
         # (batch, seq_len, model_dim)
         attn = self._combine_heads(self.attention(k, q, v, attn_mask))
-        out = self.linear_out(attn)
+        out = self.output(attn)
 
         return out

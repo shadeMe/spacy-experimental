@@ -5,21 +5,6 @@ from torch.nn import Module
 from torch import Tensor
 
 
-# https://theaisummer.com/positional-embeddings/
-class LearnablePositionalEmbedding(Module):
-    def __init__(self, dim: int, max_len: int):
-        super().__init__()
-
-        self.abs_pos_emb = torch.nn.Parameter(torch.randn(max_len, dim))
-
-    def forward(self, x: Tensor) -> Tensor:
-        """
-        Shapes:
-            x - (batch, seq_len)
-        """
-        return self.abs_pos_emb[x.size(1), :]
-
-
 # https://pytorch.org/tutorials/beginner/transformer_tutorial.html
 class SinusoidalPositionalEmbedding(Module):
     def __init__(self, dim: int, max_len: int, *, normalize=True):

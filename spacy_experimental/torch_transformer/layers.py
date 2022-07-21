@@ -11,8 +11,8 @@ class PointwiseFeedForwardLayer(Module):
     def __init__(self, hidden_dim: int, model_dim: int, *, dropout: float = 0.1):
         super().__init__()
 
-        self.first_linear = torch.nn.Linear(model_dim, hidden_dim)
-        self.second_linear = torch.nn.Linear(hidden_dim, model_dim)
+        self.intermediate = torch.nn.Linear(model_dim, hidden_dim)
+        self.output = torch.nn.Linear(hidden_dim, model_dim)
         self.activation = torch.nn.ReLU()
         self.dropout = torch.nn.Dropout(p=dropout)
 
@@ -21,9 +21,9 @@ class PointwiseFeedForwardLayer(Module):
         Shapes:
             x - (batch, seq_len, model_dim)
         """
-        out = self.first_linear(x)
+        out = self.intermediate(x)
         out = self.activation(out)
-        out = self.second_linear(out)
+        out = self.output(out)
         out = self.dropout(out)
         return out
 

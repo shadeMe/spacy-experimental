@@ -32,9 +32,9 @@ class TransformerEncoder(Module):
         )
         self.padding_idx = padding_idx
         if learnable_pos_embeddings:
-            self.pos_embeddings = LearnablePositionalEmbedding(input_dim, max_len)
+            self.pos_embeddings = torch.nn.Embedding(num_embeddings=max_len, embedding_dim=input_dim, padding_idx=padding_idx) # type: ignore
         else:
-            self.pos_embeddings = SinusoidalPositionalEmbedding(input_dim, max_len)
+            self.pos_embeddings = SinusoidalPositionalEmbedding(input_dim, max_len) # type: ignore
 
         self.input_dropout = torch.nn.Dropout(p=input_dropout)
         self.layers = torch.nn.ModuleList(
