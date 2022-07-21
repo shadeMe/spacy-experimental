@@ -1,12 +1,12 @@
 import pytest
 
-from transformers import RobertaModel, RobertaConfig
-
 from spacy_experimental.torch_transformer.transformer import TransformerEncoder
 from spacy_experimental.torch_transformer.util import convert_hf_pretrained_model_parameters
 
 @pytest.mark.slow
 def test_hf_load_roberta_weights():
+    from transformers import RobertaModel, RobertaConfig
+    
     hf_model = RobertaModel.from_pretrained("roberta-base")
     params = convert_hf_pretrained_model_parameters(hf_model)
 
