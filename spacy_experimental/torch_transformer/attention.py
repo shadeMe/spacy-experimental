@@ -7,7 +7,7 @@ from torch import Tensor
 
 # https://www.tensorflow.org/text/tutorials/transformer#scaled_dot_product_attention
 class ScaledDotProductAttention(Module):
-    def __init__(self, *, dropout: float = 0.0):
+    def __init__(self, *, dropout: float = 0.1):
         super().__init__()
         self.dropout = torch.nn.Dropout(p=dropout)
 
@@ -38,7 +38,7 @@ class ScaledDotProductAttention(Module):
 
 # https://www.tensorflow.org/text/tutorials/transformer#multi-head_attention
 class MultiHeadAttention(Module):
-    def __init__(self, model_dim: int, n_heads: int, *, dropout: float = 0.0):
+    def __init__(self, model_dim: int, n_heads: int, *, dropout: float = 0.1):
         super().__init__()
 
         if model_dim % n_heads != 0:

@@ -6,19 +6,20 @@ from torch.nn import Module
 from torch import Tensor
 
 from .layers import EncoderLayer
-from .embedding import SinusoidalPositionalEmbedding, LearnablePositionalEmbedding
+from .embedding import SinusoidalPositionalEmbedding
 
 
 class TransformerEncoder(Module):
     def __init__(
         self,
-        input_dim: int,
-        hidden_dim: int,
+        hidden_size: int,
+        intermediate_size: int,
         n_heads: int,
         n_layers: int,
-        input_dropout: float,
-        other_dropout: float,
-        max_len: int,
+        attn_dropout: float,
+        hidden_dropout: float,
+        hidden_activation: str,
+        max_pos_embeddings: int,
         vocab_size: int,
         *,
         learnable_pos_embeddings=False,
@@ -28,22 +29,24 @@ class TransformerEncoder(Module):
         super().__init__()
 
         self.input_embeddings = torch.nn.Embedding(
-            vocab_size, input_dim, padding_idx=padding_idx
+            vocab_size, hidden_size, padding_idx=padding_idx
         )
         self.padding_idx = padding_idx
         if learnable_pos_embeddings:
-            self.pos_embeddings = torch.nn.Embedding(num_embeddings=max_len, embedding_dim=input_dim, padding_idx=padding_idx) # type: ignore
+            self.pos_embeddings = torch.nn.Embedding(num_embeddings=max_pos_embeddings, embedding_dim=hidden_size) # type: ignore
         else:
-            self.pos_embeddings = SinusoidalPositionalEmbedding(input_dim, max_len) # type: ignore
+            self.pos_embeddings = SinusoidalPositionalEmbedding(hidden_size, max_pos_embeddings) # type: ignore
 
-        self.input_dropout = torch.nn.Dropout(p=input_dropout)
+        self.emb_dropout = torch.nn.Dropout(p=hidden_dropout)
         self.layers = torch.nn.ModuleList(
             [
                 EncoderLayer(
-                    input_dim,
-                    hidden_dim,
+                    hidden_size,
+                    intermediate_size,
                     n_heads,
-                    dropout=other_dropout,
+                    activation=hidden_activation,
+                    attn_dropout=attn_dropout,
+                    hidden_dropout=hidden_dropout,
                     layer_norm_eps=layer_norm_eps,
                 )
                 for _ in range(n_layers)
@@ -67,7 +70,7 @@ class TransformerEncoder(Module):
         pos = self.pos_embeddings(input)
 
         x = emb + pos
-        out = self.input_dropout(x)
+        out = self.emb_dropout(x)
 
         for layer in self.layers:
             out = layer(out, mask)
