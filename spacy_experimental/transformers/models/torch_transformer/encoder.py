@@ -14,8 +14,11 @@ class TransformerEncoderOutput:
     embedding_sum: Tensor  # [batch, seq, emb_dim]
 
     @property
-    def last_hidden_output(self) -> Tensor:
+    def last_hidden_state(self) -> Tensor:
         return self.layer_outputs[len(self.layer_outputs) - 1]
+
+    def items(self):
+        yield ("last_hidden_state", self.last_hidden_state)
 
 
 class TransformerEncoder(Module):
@@ -79,7 +82,7 @@ class TransformerEncoder(Module):
     def _get_pos_embeddings(self, x: Tensor) -> Tensor:
         if self.learnable_pos_embeddings:
             # We need to generate the position IDs from the
-            # input tensor to pass to the embedding layer and
+            # input_ids tensor to pass to the embedding layer and
             # handle padding, c.f https://github.com/huggingface/transformers/blob/330247ede2d8265aae9ab0b7a0d1a811c344960d/src/transformers/models/roberta/modeling_roberta.py#L1566
 
             mask = x.ne(self.padding_idx).int()
@@ -90,32 +93,32 @@ class TransformerEncoder(Module):
 
     def forward(
         self,
-        input: Tensor,
+        input_ids: Tensor,
         attention_mask: Optional[Tensor] = None,
         token_type_ids: Optional[Tensor] = None,
     ) -> TransformerEncoderOutput:
         """
         Shapes:
-            input, token_type_ids - (batch, seq_len)
+            input_ids, token_type_ids - (batch, seq_len)
 
         `attn_mask` indicates elements to attend to with `1` (and `0` otherwise)
 
         Returns a tuple of consisting of a list of tensors from each Transformer
-        layer and the sum of the input and positional embeddings.
+        layer and the sum of the input_ids and positional embeddings.
         """
         if attention_mask is None:
-            attention_mask = self._create_attention_mask(input)
+            attention_mask = self._create_attention_mask(input_ids)
 
-        emb = self.input_embeddings(input)
+        emb = self.input_embeddings(input_ids)
 
         if self.token_type_embeddings is not None:
             if token_type_ids is None:
                 token_type_ids = torch.zeros(
-                    input.shape, dtype=torch.long, device=input.device
+                    input_ids.shape, dtype=torch.long, device=input_ids.device
                 )
             emb += self.token_type_embeddings(token_type_ids)
 
-        pos = self._get_pos_embeddings(input)
+        pos = self._get_pos_embeddings(input_ids)
 
         embedding_sum = emb + pos
         embedding_sum = self.emb_layer_norm(embedding_sum)
